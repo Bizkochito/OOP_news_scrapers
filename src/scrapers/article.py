@@ -8,7 +8,7 @@ class Article():
     articles_logger = logging.getLogger("Article")
     articles_logger.setLevel(logging.WARNING)
 
-    def __init__(self, _id: str,url: str = "", text: str = "", date:  datetime.date = datetime.date(), source: str = "", language: str = "fr" ) -> None:
+    def __init__(self, _id: str, date, url: str = "", text: str = "", source: str = "", language: str = "fr" ) -> None:
         self._id = _id
         self.url = url
         self.text = text
