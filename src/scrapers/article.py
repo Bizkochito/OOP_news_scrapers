@@ -12,7 +12,7 @@ class Article():
         self._id = _id
         self.url = url
         self.text = text
-        self.set_date(date)
+        self.date = self.set_date(date)
         self.source = source
         self.language = language
 
@@ -26,6 +26,13 @@ class Article():
             self.date = ""
             self.articles_logger.warning(f"Issue with the date at article {self._id}, url: {self.url}")
 
+    def to_dict(self) -> dict:
+        return {'_id': self._id,
+                'url': self.url,
+                'text': self.text,
+                'date': self.date,
+                'source': self.source,
+                'language': self.language}
     
 
 

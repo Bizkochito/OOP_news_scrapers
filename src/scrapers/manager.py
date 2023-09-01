@@ -8,11 +8,13 @@ import datetime
 import requests
 from pathos.multiprocessing import ProcessingPool as Pool
 import scraper as sc
-import task
+from task import Task
+from article import Article
+
 
 class ScrapingManager():
     save_file = "savestate"
-    articles_db = "articles.json"
+    articles_file = "articles.csv"
     
     def __init__(self):
         self.scrapers=[]
@@ -29,20 +31,40 @@ class ScrapingManager():
         with Pool() as pool:
             for task_list in pool.map(lambda scraper: scraper.create_tasks(), self.scrapers):
                 self.tasks.extend(task_list)
+        self.set_task_ids()
         print("done fetching tasks")
 
     def set_task_ids(self):
-        for task in self.tasks_list:
+        for task in self.tasks:
             if task.id:
                 continue
             task.set_id(self.id_counter)
             self.id_counter += 1
 
-    def process_tasks(self):
+    def process_tasks(self, hash = None):
         with Pool() as pool:
-            self.tasks_list = pool.map(lambda task: task.process(), self.tasks_list)
-        
+            self.tasks = pool.map(lambda task: task.process(), self.tasks)
 
+    def split_articles(self):
+        tasks_buffer = []
+        articles_buffer = []
+        for item in self.tasks:
+            if type(item) == Article:
+                articles_buffer.append(item.to_dict())
+            else :
+                tasks_buffer.append(item)
+        self.tasks = tasks_buffer
+        return articles_buffer
+
+    def write_articles(self, articles_list):
+        df = pd.DataFrame(articles_list)
+        df.drop_duplicates(["url"])
+        df.to_csv(self.articles_file, mode = "a", header = not os.path.exists(self.articles_file))
+
+    def process_and_save(self):
+        self.get_tasks()
+        self.process_tasks()
+        self.write_articles(self.split_articles())
 
     def resume():
         pass
@@ -65,10 +87,5 @@ if __name__ == "__main__":
     scrapingManager = ScrapingManager()
     scrapingManager.add_scraper(sc.KnackScraper())
     scrapingManager.add_scraper(sc.LesoirScraper())
-    response = requests.get("https://www.lesoir.be/18/sections/le-direct")
 
-    scrapingManager.get_tasks()
-    scrapingManager.set_task_ids()
-    scrapingManager.process_tasks()
-    for task in scrapingManager.tasks:
-        print(len(task))
+    scrapingManager.process_and_save()

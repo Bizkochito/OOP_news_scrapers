@@ -52,7 +52,6 @@ class KnackScraper(Scraper):
             print(response.status_code)
             return 
         soup = bs(response.content, "html.parser")
-        container["source"] = self.feeds_url.split(".")[1]
         container["url"] = url
         title = soup.find_all("h1")
         if title :
@@ -79,7 +78,7 @@ class KnackScraper(Scraper):
                        container["url"], 
                        container["text"], 
                        container["date"], 
-                       container["source"], 
+                       "knack", 
                        "nl")   
 
     def describe(self):
@@ -159,15 +158,19 @@ class LesoirScraper(Scraper):
         dict = {"url": task.url}
         link_response = requests.get(dict["url"])
         link_soup = bs(link_response.content, "html.parser")
-        print(" Adding article text ...")
+        #print(" Adding article text ...")
         dict["text"] = find_article_text(link_soup, dict["url"])
-        print(" Adding date ...")
+        #print(" Adding date ...")
         dict["date"] = find_published_date(link_soup)
-        print(" Adding title ...")
+        #print(" Adding title ...")
         dict["title"] = find_article_title(link_soup)
-        print(" Adding language ...")
-        dict["language"] = "fr"
-        return Article()
+
+        return Article( task.id, 
+                        dict['url'],
+                        dict['text'],
+                        dict['date'],
+                        "lesoir",
+                        "fr")
 
 
     def describe(self):
